@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Fondo del mosaico tradicional -->
+  <rect width="200" height="200" fill="#f5f5f5" stroke="#ddd" stroke-width="2"/>
+  
+  <!-- Patrón de puntos decorativos -->
+  <circle cx="50" cy="50" r="3" fill="#cccccc"/>
+  <circle cx="100" cy="50" r="3" fill="#cccccc"/>
+  <circle cx="150" cy="50" r="3" fill="#cccccc"/>
+  
+  <circle cx="50" cy="100" r="3" fill="#cccccc"/>
+  <circle cx="100" cy="100" r="3" fill="#cccccc"/>
+  <circle cx="150" cy="100" r="3" fill="#cccccc"/>
+  
+  <circle cx="50" cy="150" r="3" fill="#cccccc"/>
+  <circle cx="100" cy="150" r="3" fill="#cccccc"/>
+  <circle cx="150" cy="150" r="3" fill="#cccccc"/>
+  
+  <!-- Líneas decorativas -->
+  <line x1="20" y1="20" x2="180" y2="20" stroke="#ddd" stroke-width="1"/>
+  <line x1="20" y1="180" x2="180" y2="180" stroke="#ddd" stroke-width="1"/>
+</svg>

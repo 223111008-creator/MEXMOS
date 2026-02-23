@@ -1,0 +1,41 @@
+name: mexmos
+description: Mosaicos Personalizados - Aplicación de configuración de mosaicos con soporte para daltonismo
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Gestión de estado (vital para el configurador de colores)
+  provider: ^6.1.1
+
+  # Para manejar SVGs (la mejor forma de cambiar colores de mosaicos sin perder calidad)
+  flutter_svg: ^2.0.10+1
+
+  # Paletas de colores accesibles y selectores
+  flutter_colorpicker: ^1.1.0
+
+  # Iconos adicionales para mejorar la navegación visual
+  font_awesome_flutter: ^10.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    # SVGs de mosaicos tradicionales
+    - assets/svgs/tradicional/
+    # SVGs de mosaicos coloniales
+    - assets/svgs/colonial/
+    # Imágenes e inspiración
+    - assets/images/

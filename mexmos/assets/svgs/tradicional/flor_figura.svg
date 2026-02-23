@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Flor figura central (modificable con color dinámico) -->
+  
+  <!-- Pétalos exteriores -->
+  <ellipse cx="100" cy="50" rx="20" ry="35" fill="currentColor" opacity="0.8"/>
+  <ellipse cx="140" cy="65" rx="20" ry="35" fill="currentColor" opacity="0.8" transform="rotate(60 140 65)"/>
+  <ellipse cx="140" cy="135" rx="20" ry="35" fill="currentColor" opacity="0.8" transform="rotate(120 140 135)"/>
+  <ellipse cx="100" cy="150" rx="20" ry="35" fill="currentColor" opacity="0.8"/>
+  <ellipse cx="60" cy="135" rx="20" ry="35" fill="currentColor" opacity="0.8" transform="rotate(-120 60 135)"/>
+  <ellipse cx="60" cy="65" rx="20" ry="35" fill="currentColor" opacity="0.8" transform="rotate(-60 60 65)"/>
+  
+  <!-- Centro de la flor -->
+  <circle cx="100" cy="100" r="18" fill="currentColor"/>
+  
+  <!-- Detalles del centro -->
+  <circle cx="100" cy="100" r="12" fill="white" opacity="0.3"/>
+</svg>
