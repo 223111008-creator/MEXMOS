@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/constants.dart';
 import '../../logic/configurador_logic.dart';
+import '../../data/repositories/mosaico_repositories.dart'; // CORREGIDO
+import '../../domain/models/pigmento.dart';
+import '../../domain/models/grano_marmol.dart';
+import '../widgets/accessibility_control.dart';
+import '../widgets/color_picker_accesible.dart';
+import '../widgets/grano_picker_accesible.dart';
 
-/// Pantalla de Configurador - Donde usuarios eligen colores para sus mosaicos
 class ConfiguradorScreen extends StatefulWidget {
   const ConfiguradorScreen({super.key});
 
@@ -12,76 +17,133 @@ class ConfiguradorScreen extends StatefulWidget {
 }
 
 class _ConfiguradorScreenState extends State<ConfiguradorScreen> {
+  final MosaicoRepository _repository = MosaicoRepository();
+  late Future<List<dynamic>> _catalogosFuture;
+  String _modoDaltonismo = 'Normal';
+
+  @override
+  void initState() {
+    super.initState();
+    _catalogosFuture = Future.wait([
+      _repository.obtenerPigmentos(),
+      _repository.obtenerGranos(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final configLogic = context.watch<ConfiguradorLogic>();
+    final receta = configLogic.recetaSeleccionada;
+
+    if (receta == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text(AppConstants.configuradorTitle)),
+        body: const Center(child: Text('Error: No se ha seleccionado receta.')),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppConstants.configuradorTitle),
-        elevation: 0,
+        actions: [
+          AccessibilityControl(
+            modoActual: _modoDaltonismo,
+            onModoCambiado: (nuevoModo) {
+              setState(() => _modoDaltonismo = nuevoModo);
+            },
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppConstants.paddingDefault),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppConstants.configuradorTitle,
-                style: Theme.of(context).textTheme.displaySmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppConstants.configuradorSubtitle,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              // Stack de SVG del mosaico (Fondo + Figura + Borde)
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+      body: FutureBuilder<List<dynamic>>(
+        future: _catalogosFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error al cargar catálogo: ${snapshot.error}'));
+          }
+
+          final List<Pigmento> pigmentosDisponibles = snapshot.data![0];
+          final List<GranoMarmol> granosDisponibles = snapshot.data![1];
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Receta: ${receta.nombre}',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                padding: const EdgeInsets.all(AppConstants.paddingDefault),
-                height: 300,
-                child: const Center(
-                  child: Text('Visor de Mosaico (Stack SVG)'),
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Selector de colores accesible
-              Text(
-                'Selecciona tu Color',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                const Divider(height: 30),
+                
+                const Text('Escala de producción (m²):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Slider(
+                        value: configLogic.metrosCuadrados,
+                        min: 1.0,
+                        max: 100.0,
+                        divisions: 99,
+                        onChanged: (val) => configLogic.actualizarMetros(val),
+                      ),
                     ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    Text('${configLogic.metrosCuadrados.round()} m²', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ],
                 ),
-                padding: const EdgeInsets.all(AppConstants.paddingDefault),
-                child: const Center(
-                  child: Text('Selector de Colores'),
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/resumen');
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text(AppConstants.botonVerResumen),
+                const SizedBox(height: 20),
+
+                ...receta.pigmentos.map((pigReceta) {
+                  final pigmentoOriginal = pigReceta.pigmento;
+                  final pigmentoActual = configLogic.pigmentosSeleccionados[pigmentoOriginal.id] ?? pigmentoOriginal;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: ColorPickerAccesible(
+                      etiqueta: 'Reemplazar color: ${pigmentoOriginal.nombreComercial}',
+                      pigmentosDisponibles: pigmentosDisponibles,
+                      pigmentoSeleccionado: pigmentoActual,
+                      modoDaltonismo: _modoDaltonismo,
+                      onPigmentoSeleccionado: (nuevoPigmento) {
+                        configLogic.personalizarPigmento(pigmentoOriginal.id, nuevoPigmento);
+                      },
+                    ),
+                  );
+                }),
+
+                ...receta.granos.map((granoReceta) {
+                  final granoOriginal = granoReceta.grano;
+                  final granoActual = configLogic.granosSeleccionados[granoOriginal.id] ?? granoOriginal;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: GranoPickerAccesible(
+                      etiqueta: 'Reemplazar grano: ${granoOriginal.nombre}',
+                      granosDisponibles: granosDisponibles,
+                      granoSeleccionado: granoActual,
+                      modoDaltonismo: _modoDaltonismo,
+                      onGranoSeleccionado: (nuevoGrano) {
+                        configLogic.personalizarGrano(granoOriginal.id, nuevoGrano);
+                      },
+                    ),
+                  );
+                }),
+
+                const SizedBox(height: 40),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pushNamed(context, '/resumen'),
+                    child: const Text('Calcular Ficha Técnica', style: TextStyle(fontSize: 16)),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

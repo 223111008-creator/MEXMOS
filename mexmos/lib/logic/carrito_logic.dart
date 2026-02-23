@@ -1,60 +1,23 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import '../domain/models/configuracion_pedido.dart';
 
-/// Maneja los metros cuadrados y el pedido final
+/// Maneja el estado de los pedidos acumulados (carrito de compras) 
+/// antes de ser confirmados para producción.
 class CarritoLogic extends ChangeNotifier {
-  /// Metros cuadrados solicitados
-  double _metrosCuadrados = 0.0;
-  
-  /// Configuración del pedido: {mosaicoId: colorId}
-  final Map<String, String> _configuracion = {};
+  final List<ConfiguracionPedido> _pedidos = [];
 
-  /// Obtener metros cuadrados
-  double get metrosCuadrados => _metrosCuadrados;
+  /// Retorna una lista inmutable de los pedidos actuales.
+  List<ConfiguracionPedido> get pedidos => List.unmodifiable(_pedidos);
 
-  /// Establecer metros cuadrados
-  void setMetrosCuadrados(double metros) {
-    if (metros > 0) {
-      _metrosCuadrados = metros;
-      notifyListeners();
-    }
-  }
-
-  /// Agregar configuración de mosaico
-  void agregarAlCarrito(String mosaicoId, String colorId) {
-    _configuracion[mosaicoId] = colorId;
+  /// Añade una nueva configuración terminada al carrito.
+  void agregarPedido(ConfiguracionPedido pedido) {
+    _pedidos.add(pedido);
     notifyListeners();
   }
 
-  /// Remover mosaico del carrito
-  void removerDelCarrito(String mosaicoId) {
-    _configuracion.remove(mosaicoId);
-    notifyListeners();
-  }
-
-  /// Obtener configuración del carrito
-  Map<String, String> obtenerConfiguracion() {
-    return Map.unmodifiable(_configuracion);
-  }
-
-  /// Calcular precio total
-  double calcularTotal({double precioMetroCuadrado = 50.0}) {
-    return _metrosCuadrados * precioMetroCuadrado;
-  }
-
-  /// Limpiar carrito
+  /// Vacía por completo el carrito de compras.
   void limpiarCarrito() {
-    _metrosCuadrados = 0.0;
-    _configuracion.clear();
+    _pedidos.clear();
     notifyListeners();
-  }
-
-  /// Verificar si el carrito está listo para confirmación
-  bool estaListo() {
-    return _metrosCuadrados > 0 && _configuracion.isNotEmpty;
-  }
-
-  /// Obtener cantidad de items configurados
-  int obtenerCantidadItems() {
-    return _configuracion.length;
   }
 }

@@ -1,126 +1,104 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/constants.dart';
+import '../../data/repositories/mosaico_repositories.dart'; // CORREGIDO
+import '../../domain/services/calculador_produccion.dart';
+import '../../domain/models/ficha_tecnica.dart';
+import '../../logic/configurador_logic.dart';
 
-/// Pantalla de Resumen - Muestra el resumen del pedido antes de confirmar
-class ResumenScreen extends StatelessWidget {
+class ResumenScreen extends StatefulWidget {
   const ResumenScreen({super.key});
+
+  @override
+  State<ResumenScreen> createState() => _ResumenScreenState();
+}
+
+class _ResumenScreenState extends State<ResumenScreen> {
+  Future<FichaTecnica>? _calculoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _ejecutarCalculoMRP();
+  }
+
+  void _ejecutarCalculoMRP() {
+    final config = context.read<ConfiguradorLogic>().generarConfiguracion();
+    
+    if (config != null) {
+      final repository = MosaicoRepository();
+      final calculador = CalculadorProduccion(repository);
+      _calculoFuture = calculador.generarFicha(config);
+    } else {
+      _calculoFuture = Future.error('No hay una configuración válida para calcular.');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppConstants.resumenTitle),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppConstants.paddingDouble),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppConstants.resumenTitle,
-                style: Theme.of(context).textTheme.displaySmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppConstants.resumenSubtitle,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+      appBar: AppBar(title: const Text(AppConstants.resumenTitle)),
+      body: FutureBuilder<FichaTecnica>(
+        future: _calculoFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(semanticsLabel: 'Calculando MRP...'), // CORREGIDO
+            );
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}', textAlign: TextAlign.center));
+          }
+          if (!snapshot.hasData) {
+            return const Center(child: Text('No se pudo generar la Ficha Técnica.'));
+          }
+
+          final ficha = snapshot.data!;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Ficha Técnica Generada', style: Theme.of(context).textTheme.headlineSmall),
+                Text('ID: ${ficha.id}', style: const TextStyle(color: Colors.grey)),
+                const Divider(height: 30),
+                Text(
+                  'Total de mezcla sólida: ${ficha.totalKg.toStringAsFixed(2)} kg',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                padding: const EdgeInsets.all(AppConstants.paddingDefault),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tu Configuración',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Detalle de mosaicos y colores seleccionados aquí',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Metros Cuadrados:',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  Text(
-                    '0 m²',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Precio Unitario:',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  Text(
-                    '\$${AppConstants.precioMetroCuadrado.toStringAsFixed(2)}/m²',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
-              ),
-              const Divider(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'TOTAL:',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  Text(
-                    '\$0.00',
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          color: Colors.green,
-                        ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(AppConstants.mensajePedidoConfirmado),
+                const SizedBox(height: 20),
+                const Text('Insumos Requeridos:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 10),
+                ...ficha.insumosRequeridos.map((linea) => ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      leading: const Icon(Icons.check_box_outline_blank),
+                      title: Text(linea.insumo.nombre),
+                      trailing: Text(
+                        '${linea.cantidadTotalKg.toStringAsFixed(2)} kg',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                    );
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text(AppConstants.botonConfirmar),
+                    )),
+                const Divider(height: 30),
+                const Text('Instrucciones Operativas:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    ficha.instruccionesMezcla,
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
