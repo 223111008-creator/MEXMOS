@@ -83,8 +83,9 @@ class MosaicoRepository {
 
   final List<Receta> _recetasDB = [];
 
-  MosaicoRepository() {
-    final pastaBasePrueba = const PastaBase(
+ MosaicoRepository() {
+    // Cambio: de 'final' a 'const'
+    const pastaBasePrueba = PastaBase(
       id: 'pb-01',
       nombre: 'Pasta Gris Estándar',
       cementoInsumoId: 'ins-cem-01',
