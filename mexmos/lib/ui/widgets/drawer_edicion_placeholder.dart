@@ -2,48 +2,40 @@ import 'package:flutter/material.dart';
 import '../../logic/trabajo_logic.dart';
 
 class DrawerEdicionPlaceholder extends StatelessWidget {
-  final OpcionTrabajo opcionSeleccionada;
+  final OpcionDrawer opcion;
 
-  const DrawerEdicionPlaceholder({super.key, required this.opcionSeleccionada});
+  const DrawerEdicionPlaceholder({super.key, required this.opcion});
 
   @override
   Widget build(BuildContext context) {
-    String texto = '';
-    switch (opcionSeleccionada) {
-      case OpcionTrabajo.base:
-        texto = 'Aquí irán los controles para la capa base (color, opacidad)';
+    String texto;
+    switch (opcion) {
+      case OpcionDrawer.base:
+        texto = 'Opciones de Base (Configuración de color, opacidad)';
         break;
-      case OpcionTrabajo.grano:
-        texto = 'Aquí irán los controles para el grano (tipo, color, densidad)';
+      case OpcionDrawer.grano:
+        texto = 'Opciones de Grano (Configuración de tipo, color, densidad)';
         break;
-      case OpcionTrabajo.capas:
-        texto = 'Aquí irá el gestor de capas de grano';
+      case OpcionDrawer.capas:
+        texto = 'Opciones de Capas (Gestión de Capas de Grano)';
         break;
-      case OpcionTrabajo.acabado:
-        texto = 'Aquí irán las opciones de acabado (mate, pulido, etc.)';
-        break;
-      case OpcionTrabajo.vista:
-        texto = 'Aquí irán los controles de vista (zoom, rotación, etc.)';
+      case OpcionDrawer.acabado:
+        texto = 'Opciones de Acabado (mate, pulido, etc.)';
         break;
     }
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey[300]!)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Editando: ${opcionSeleccionada.name}',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      padding: const EdgeInsets.all(24),
+      color: Colors.white,
+      child: Center(
+        child: Text(
+          texto,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 18,
+            color: Colors.blueGrey.shade700,
           ),
-          const SizedBox(height: 8),
-          Text(texto),
-        ],
+        ),
       ),
     );
   }
