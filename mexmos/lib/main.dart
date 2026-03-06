@@ -2,7 +2,7 @@
 import 'package:provider/provider.dart';
 import 'logic/trabajo_logic.dart';
 import 'logic/accesibilidad_logic.dart';
-import 'logic/configurador_logic.dart'; // Just in case Catalogo uses it
+import 'logic/configurador_logic.dart';
 import 'ui/screens/trabajo_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/catalogo_screen.dart';
