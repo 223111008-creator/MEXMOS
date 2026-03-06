@@ -1,13 +1,35 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'logic/trabajo_logic.dart';
 import 'logic/accesibilidad_logic.dart';
-import 'logic/configurador_logic.dart';
+import 'logic/configurador_logic.dart'; // Just in case Catalogo uses it
 import 'ui/screens/trabajo_screen.dart';
 import 'ui/screens/home_screen.dart';
 import 'ui/screens/catalogo_screen.dart';
+import 'ui/screens/settings_screen.dart';
+import 'ui/screens/mis_disenos_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    // Inicialización manual de Firebase con llaves directas de la Web App
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyBuvo_N9gKJfVpHm_M8twtQL-kFaNazyBw",
+        authDomain: "mexmos-77559.firebaseapp.com",
+        projectId: "mexmos-77559",
+        storageBucket: "mexmos-77559.firebasestorage.app",
+        messagingSenderId: "811931863091",
+        appId: "1:811931863091:web:e2660a34391b8427647b46",
+      ),
+    );
+  } catch (e) {
+    debugPrint("Firebase no inicializado: $e");
+    // Continuamos la app para que la UI funcione sin backend aún
+  }
+
   runApp(
     MultiProvider(
       providers: [
@@ -26,13 +48,34 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accesibilidadLogic = context.watch<AccesibilidadLogic>();
+
     return MaterialApp(
       title: 'Mosaico App',
+      theme: accesibilidadLogic.altoContraste
+          ? ThemeData.dark().copyWith(
+              colorScheme: const ColorScheme.dark(
+                primary: Colors.lightBlueAccent,
+                secondary: Colors.amberAccent,
+              ),
+            )
+          : ThemeData.light(),
+      builder: (context, child) {
+        return MediaQuery(
+          // Escala global para textos y UI
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(accesibilidadLogic.escalaTexto),
+          ),
+          child: child!,
+        );
+      },
       initialRoute: '/home',
       routes: {
         '/home': (context) => const HomeScreen(),
         '/catalogo': (context) => const CatalogoScreen(),
         '/trabajo': (context) => const TrabajoScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/mis_disenos': (context) => const MisDisenosScreen(),
         // ... otras rutas
       },
     );

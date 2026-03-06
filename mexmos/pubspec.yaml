@@ -22,6 +22,11 @@ dependencies:
 
   # Iconos adicionales para mejorar la navegación visual
   font_awesome_flutter: ^10.7.0
+  firebase_core: ^3.6.0
+  cloud_firestore: ^5.4.3
+  pdf: ^3.11.1
+  printing: ^5.13.2
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:

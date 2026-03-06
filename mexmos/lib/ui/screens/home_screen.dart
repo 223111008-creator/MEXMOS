@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../widgets/accessibility_control.dart';
-import '../../logic/accesibilidad_logic.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final accesibilidadLogic = context.watch<AccesibilidadLogic>();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mexmos'),
         actions: [
-          AccessibilityControl(
-            modoActual: accesibilidadLogic.modoDaltonismo,
-            onModoCambiado: accesibilidadLogic.cambiarModo,
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Ajustes Globales y Accesibilidad',
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
           ),
           IconButton(
             icon: const Icon(Icons.info_outline),
@@ -61,13 +57,7 @@ class HomeScreen extends StatelessWidget {
                       title: 'Mis Diseños',
                       description:
                           'Ver catálogos de diseños previos guardados.',
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  'La función de guardar diseños usando SQLite estará disponible próximamente.')),
-                        );
-                      },
+                      onTap: () => Navigator.pushNamed(context, '/mis_disenos'),
                     ),
                   ],
                 ),

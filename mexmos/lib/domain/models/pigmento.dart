@@ -14,10 +14,24 @@ class Pigmento {
     required this.insumoRelacionadoId,
   })  : assert(id.isNotEmpty, 'El ID no puede estar vacío.'),
         assert(
-          RegExp(r'^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$').hasMatch(codigoHex),
+          RegExp(r'^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$')
+              .hasMatch(codigoHex),
           'El código hex debe ser válido (ej. #RGB, #RRGGBB, #RRGGBBAA).',
         ),
-        assert(insumoRelacionadoId.isNotEmpty, 'Debe estar vinculado a un insumo.');
+        assert(insumoRelacionadoId.isNotEmpty,
+            'Debe estar vinculado a un insumo.');
+
+  factory Pigmento.personalizado(String hexCode) {
+    // Asegurarse de que el hex inicie con #
+    final hexFormatted = hexCode.startsWith('#') ? hexCode : '#$hexCode';
+    return Pigmento(
+      id: 'pig-custom-${DateTime.now().millisecondsSinceEpoch}',
+      nombreComercial: 'Personalizado ($hexFormatted)',
+      codigoHex: hexFormatted,
+      codigoFisico: 'N/A',
+      insumoRelacionadoId: 'ins-pig-custom', // Insumo comodín
+    );
+  }
 
   Pigmento copyWith({
     String? id,

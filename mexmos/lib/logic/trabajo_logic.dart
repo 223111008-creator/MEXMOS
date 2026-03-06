@@ -1,9 +1,12 @@
 // lib/logic/trabajo_logic.dart
 import 'package:flutter/foundation.dart';
 import '../domain/models/pigmento.dart';
-import '../domain/models/grano_marmol.dart';
 import '../domain/models/capa_grano.dart';
 import '../domain/models/receta.dart';
+import '../domain/models/grano_en_receta.dart';
+import '../domain/models/pigmento_en_receta.dart';
+import '../domain/models/pasta_base.dart';
+import '../data/repositories/mosaico_repositories.dart';
 
 enum OpcionDrawer { base, grano, capas, acabado }
 
@@ -12,6 +15,10 @@ class TrabajoLogic extends ChangeNotifier {
   OpcionDrawer get opcionSeleccionada => _opcionSeleccionada;
 
   // --- Propiedades de Base ---
+  final List<Pigmento> _pigmentosPersonalizados = [];
+  List<Pigmento> get pigmentosPersonalizados =>
+      List.unmodifiable(_pigmentosPersonalizados);
+
   Pigmento? _colorBaseSeleccionado;
   double _opacidadBase = 1.0;
 
@@ -41,6 +48,12 @@ class TrabajoLogic extends ChangeNotifier {
 
   void actualizarOpacidadBase(double opacidad) {
     _opacidadBase = opacidad.clamp(0.0, 1.0);
+    notifyListeners();
+  }
+
+  void agregarPigmentoPersonalizado(Pigmento pigmento) {
+    _pigmentosPersonalizados.add(pigmento);
+    // Auto-seleccionar si se añade para la base (opcional, o dejar que el UI lo haga)
     notifyListeners();
   }
 
@@ -79,5 +92,46 @@ class TrabajoLogic extends ChangeNotifier {
     _acabadoSeleccionado = 'Mate';
 
     notifyListeners();
+  }
+
+  Receta crearRecetaActual(String nombre, [String? descripcion]) {
+    return Receta(
+      id: 'diseno-${DateTime.now().millisecondsSinceEpoch}', // ID único simple
+      nombre: nombre,
+      descripcion: descripcion,
+      // Usamos una pasta base genérica por ahora ya que el configurador se saltó esa parte física
+      pastaBase: const PastaBase(
+        id: 'pb-custom',
+        nombre: 'Pasta Base Personalizada',
+        cementoInsumoId: 'ins-cem-01',
+        marmolinaInsumoId: 'ins-mar-01',
+        proporcionCemento: 1.0,
+        proporcionMarmolina: 3.0,
+        aguaLitrosPorKgSeco: 0.15,
+      ),
+      pigmentos: _colorBaseSeleccionado != null
+          ? [
+              PigmentoEnReceta(
+                  pigmento: _colorBaseSeleccionado!, cantidadKgPorM2: 0.5)
+            ]
+          : [],
+      granos: _capasGrano
+          .map((capa) => GranoEnReceta(
+                grano: capa.grano,
+                cantidadKgPorM2: 5.0 *
+                    capa.densidad, // Translación de densidad a Kg empírico
+              ))
+          .toList(),
+      rendimientoKgPorM2: 25.0,
+      aguaLitrosPorM2: 3.75,
+      fechaCreacion: DateTime.now(),
+      activa: true,
+    );
+  }
+
+  Future<void> guardarDisenoActual(String nombre, String? descripcion) async {
+    final repo = MosaicoRepository();
+    final receta = crearRecetaActual(nombre, descripcion);
+    await repo.guardarReceta(receta);
   }
 }

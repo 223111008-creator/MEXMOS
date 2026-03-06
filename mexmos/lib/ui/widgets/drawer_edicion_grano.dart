@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../domain/models/pigmento.dart';
 import '../../domain/models/grano_marmol.dart';
 import '../../domain/models/capa_grano.dart';
@@ -59,6 +60,51 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
     });
   }
 
+  Future<void> _mostrarDialogoColorPersonalizado(BuildContext context) async {
+    Color tempColor = Colors.blue;
+    final result = await showDialog<Color>(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            title: const Text('Color del Pigmento'),
+            content: SingleChildScrollView(
+              child: ColorPicker(
+                pickerColor: tempColor,
+                onColorChanged: (color) {
+                  tempColor = color;
+                },
+                enableAlpha: false,
+                displayThumbColor: true,
+                pickerAreaHeightPercent: 0.8,
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancelar')),
+              ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, tempColor),
+                  child: const Text('Añadir y Teñir Piedra')),
+            ],
+          );
+        });
+
+    if (result != null) {
+      try {
+        final hexString =
+            '#${result.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
+        final nuevoPigmento = Pigmento.personalizado(hexString);
+        widget.logic.agregarPigmentoPersonalizado(nuevoPigmento);
+        setState(() {
+          _pigmentoSeleccionado = nuevoPigmento;
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error procesando color')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -96,13 +142,18 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
                     flex: 2,
                     child: SingleChildScrollView(
                       child: ColorPickerAccesible(
-                        pigmentosDisponibles: widget.pigmentosDisponibles,
+                        pigmentosDisponibles: [
+                          ...widget.pigmentosDisponibles,
+                          ...widget.logic.pigmentosPersonalizados
+                        ],
                         pigmentoSeleccionado: _pigmentoSeleccionado,
                         onPigmentoSeleccionado: (pigmento) {
                           setState(() {
                             _pigmentoSeleccionado = pigmento;
                           });
                         },
+                        onAddCustomColor: () =>
+                            _mostrarDialogoColorPersonalizado(context),
                         etiqueta: 'Color del Grano',
                       ),
                     ),

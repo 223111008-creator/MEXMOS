@@ -8,9 +8,13 @@ import '../../domain/models/grano_en_receta.dart';
 import '../../domain/models/receta.dart';
 import '../../domain/models/configuracion_pedido.dart';
 
-/// Repositorio que simula la conexión a una base de datos para obtener 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+/// Repositorio que simula la conexión a una base de datos para obtener
 /// los insumos, pigmentos, granos y recetas disponibles en la fábrica.
+/// Ahora se integra con Firestore para el guardado de recetas del usuario.
 class MosaicoRepository {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // --- Base de Datos en Memoria ---
 
   final List<Insumo> _insumosDB = [
@@ -69,12 +73,95 @@ class MosaicoRepository {
   ];
 
   final List<GranoMarmol> _granosDB = [
+    // --- Quebradora ---
     const GranoMarmol(
-      id: 'gra-01',
-      nombre: 'Mármol Blanco Macael',
-      equipo: EquipoMolienda.molinoBoludo,
+      id: 'gra-q-02',
+      nombre: 'Mármol (Quebradora)',
+      equipo: EquipoMolienda.quebradora,
       codigoTamano: '0-2',
       abertura: '1/8"',
+      colorNatural: 0xFFF5F5F5,
+      esTenible: true,
+      insumoRelacionadoId: 'ins-gra-01',
+    ),
+    const GranoMarmol(
+      id: 'gra-q-34',
+      nombre: 'Mármol (Quebradora)',
+      equipo: EquipoMolienda.quebradora,
+      codigoTamano: '3-4',
+      abertura: '1/2"',
+      colorNatural: 0xFFF5F5F5,
+      esTenible: true,
+      insumoRelacionadoId: 'ins-gra-01',
+    ),
+    const GranoMarmol(
+      id: 'gra-q-56',
+      nombre: 'Mármol (Quebradora)',
+      equipo: EquipoMolienda.quebradora,
+      codigoTamano: '5-6',
+      abertura: '3/4"',
+      colorNatural: 0xFFF5F5F5,
+      esTenible: true,
+      insumoRelacionadoId: 'ins-gra-01',
+    ),
+    // --- Molino Boludo ---
+    const GranoMarmol(
+      id: 'gra-mb-23',
+      nombre: 'Mármol (Molino Boludo)',
+      equipo: EquipoMolienda.molinoBoludo,
+      codigoTamano: '2 1/2 - 3 1/2',
+      abertura: '7/16"',
+      colorNatural: 0xFFF5F5F5,
+      esTenible: true,
+      insumoRelacionadoId: 'ins-gra-01',
+    ),
+    const GranoMarmol(
+      id: 'gra-mb-3',
+      nombre: 'Mármol (Molino Boludo)',
+      equipo: EquipoMolienda.molinoBoludo,
+      codigoTamano: '3',
+      abertura: '1/4"',
+      colorNatural: 0xFFF5F5F5,
+      esTenible: true,
+      insumoRelacionadoId: 'ins-gra-01',
+    ),
+    const GranoMarmol(
+      id: 'gra-mb-25',
+      nombre: 'Mármol (Molino Boludo)',
+      equipo: EquipoMolienda.molinoBoludo,
+      codigoTamano: '2 1/2',
+      abertura: '3/16"',
+      colorNatural: 0xFFF5F5F5,
+      esTenible: true,
+      insumoRelacionadoId: 'ins-gra-01',
+    ),
+    // --- Molino America ---
+    const GranoMarmol(
+      id: 'gra-ma-2',
+      nombre: 'Mármol (Molino América)',
+      equipo: EquipoMolienda.molinoAmerica,
+      codigoTamano: '2',
+      abertura: '1/8"',
+      colorNatural: 0xFFF5F5F5,
+      esTenible: true,
+      insumoRelacionadoId: 'ins-gra-01',
+    ),
+    const GranoMarmol(
+      id: 'gra-ma-1',
+      nombre: 'Mármol (Molino América)',
+      equipo: EquipoMolienda.molinoAmerica,
+      codigoTamano: '1',
+      abertura: '2mm',
+      colorNatural: 0xFFF5F5F5,
+      esTenible: true,
+      insumoRelacionadoId: 'ins-gra-01',
+    ),
+    const GranoMarmol(
+      id: 'gra-ma-05',
+      nombre: 'Mármol (Molino América)',
+      equipo: EquipoMolienda.molinoAmerica,
+      codigoTamano: '0 1/2',
+      abertura: '1.1mm',
       colorNatural: 0xFFF5F5F5,
       esTenible: true,
       insumoRelacionadoId: 'ins-gra-01',
@@ -83,7 +170,7 @@ class MosaicoRepository {
 
   final List<Receta> _recetasDB = [];
 
- MosaicoRepository() {
+  MosaicoRepository() {
     // Cambio: de 'final' a 'const'
     const pastaBasePrueba = PastaBase(
       id: 'pb-01',
@@ -99,7 +186,8 @@ class MosaicoRepository {
       Receta(
         id: 'rec-01',
         nombre: 'Clásico Rojo',
-        descripcion: 'Mosaico tradicional base gris con pigmento rojo y grano blanco.',
+        descripcion:
+            'Mosaico tradicional base gris con pigmento rojo y grano blanco.',
         pastaBase: pastaBasePrueba,
         pigmentos: [
           PigmentoEnReceta(pigmento: _pigmentosDB.first, cantidadKgPorM2: 0.5),
@@ -116,8 +204,39 @@ class MosaicoRepository {
   }
 
   Future<List<Receta>> obtenerRecetasDisponibles() async {
-    await Future.delayed(const Duration(milliseconds: 600)); 
+    await Future.delayed(const Duration(milliseconds: 600));
     return _recetasDB.where((r) => r.activa).toList();
+  }
+
+  // --- Integración con Cloud Firestore ---
+
+  Future<void> guardarReceta(Receta receta) async {
+    try {
+      await _firestore
+          .collection('recetas')
+          .doc(receta.id)
+          .set(receta.toJson());
+
+      // Guardar también en la copia local temporalmente si se desea
+      _recetasDB.add(receta);
+    } catch (e) {
+      throw Exception('Error al guardar la receta en Firestore: $e');
+    }
+  }
+
+  Future<List<Receta>> obtenerMisDisenos() async {
+    try {
+      final snapshot = await _firestore
+          .collection('recetas')
+          .orderBy('fechaCreacion', descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) => Receta.fromJson(doc.data())).toList();
+    } catch (e) {
+      // Si falla (ej. si no hay internet o firebase no configurado),
+      // regresamos la lista en memoria como fallback.
+      return _recetasDB;
+    }
   }
 
   Future<List<Pigmento>> obtenerPigmentos() async {
@@ -139,7 +258,8 @@ class MosaicoRepository {
     }
   }
 
-  Future<ConfiguracionPedido> guardarConfiguracion(ConfiguracionPedido config) async {
+  Future<ConfiguracionPedido> guardarConfiguracion(
+      ConfiguracionPedido config) async {
     await Future.delayed(const Duration(milliseconds: 800));
     return config;
   }
