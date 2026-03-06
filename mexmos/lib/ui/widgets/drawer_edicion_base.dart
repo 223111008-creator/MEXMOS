@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../domain/models/pigmento.dart';
 import '../../logic/trabajo_logic.dart';
 
+import 'color_picker_accesible.dart';
+
 class DrawerEdicionBase extends StatelessWidget {
   final TrabajoLogic logic;
   final List<Pigmento> pigmentosDisponibles;
@@ -21,19 +23,11 @@ class DrawerEdicionBase extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Color de Base', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 8),
-          // Versión simplificada de ColorPickerAccesible
-          Wrap(
-            spacing: 8,
-            children: pigmentosDisponibles.map((pigmento) {
-              final isSelected = logic.colorBaseSeleccionado?.id == pigmento.id;
-              return ChoiceChip(
-                label: Text(pigmento.nombre),
-                selected: isSelected,
-                onSelected: (_) => logic.seleccionarColorBase(pigmento),
-              );
-            }).toList(),
+          ColorPickerAccesible(
+            pigmentosDisponibles: pigmentosDisponibles,
+            pigmentoSeleccionado: logic.colorBaseSeleccionado,
+            onPigmentoSeleccionado: logic.seleccionarColorBase,
+            etiqueta: 'Color de Base',
           ),
           const Spacer(),
           const Text('Opacidad', style: TextStyle(fontWeight: FontWeight.bold)),

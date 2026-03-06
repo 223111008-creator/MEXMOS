@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../logic/trabajo_logic.dart';
 
 class DrawerVertical extends StatelessWidget {
-  final OpcionTrabajo opcionSeleccionada;
-  final Function(OpcionTrabajo) onOpcionSeleccionada;
+  final OpcionDrawer opcionSeleccionada;
+  final Function(OpcionDrawer) onOpcionSeleccionada;
 
   const DrawerVertical({
     super.key,
@@ -15,11 +15,12 @@ class DrawerVertical extends StatelessWidget {
   Widget build(BuildContext context) {
     // Definir las opciones con ícono y etiqueta
     final opciones = [
-      _OpcionItem(icon: Icons.format_paint, label: 'Base', tipo: OpcionTrabajo.base),
-      _OpcionItem(icon: Icons.grain, label: 'Grano', tipo: OpcionTrabajo.grano),
-      _OpcionItem(icon: Icons.layers, label: 'Capas', tipo: OpcionTrabajo.capas),
-      _OpcionItem(icon: Icons.brush, label: 'Acabado', tipo: OpcionTrabajo.acabado),
-      _OpcionItem(icon: Icons.visibility, label: 'Vista', tipo: OpcionTrabajo.vista),
+      _OpcionItem(
+          icon: Icons.format_paint, label: 'Base', tipo: OpcionDrawer.base),
+      _OpcionItem(icon: Icons.grain, label: 'Grano', tipo: OpcionDrawer.grano),
+      _OpcionItem(icon: Icons.layers, label: 'Capas', tipo: OpcionDrawer.capas),
+      _OpcionItem(
+          icon: Icons.brush, label: 'Acabado', tipo: OpcionDrawer.acabado),
     ];
 
     return Container(
@@ -37,7 +38,8 @@ class DrawerVertical extends StatelessWidget {
               onTap: () => onOpcionSeleccionada(item.tipo),
               child: Container(
                 height: 90, // Alto del botón
-                width: 105, // Ancho del botón (aunque el contenedor padre ya define 120)
+                width:
+                    105, // Ancho del botón (aunque el contenedor padre ya define 120)
                 margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                 decoration: BoxDecoration(
                   color: isSelected ? Colors.blue[100] : Colors.white,
@@ -50,13 +52,16 @@ class DrawerVertical extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(item.icon, size: 32, color: isSelected ? Colors.blue : Colors.grey[700]),
+                    Icon(item.icon,
+                        size: 32,
+                        color: isSelected ? Colors.blue : Colors.grey[700]),
                     const SizedBox(height: 4),
                     Text(
                       item.label,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
                         color: isSelected ? Colors.blue : Colors.grey[800],
                       ),
                     ),
@@ -74,6 +79,7 @@ class DrawerVertical extends StatelessWidget {
 class _OpcionItem {
   final IconData icon;
   final String label;
-  final OpcionTrabajo tipo;
-  const _OpcionItem({required this.icon, required this.label, required this.tipo});
+  final OpcionDrawer tipo;
+  const _OpcionItem(
+      {required this.icon, required this.label, required this.tipo});
 }

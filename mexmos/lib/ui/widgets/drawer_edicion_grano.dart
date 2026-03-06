@@ -1,9 +1,10 @@
-// lib/ui/widgets/drawer_edicion_grano.dart
 import 'package:flutter/material.dart';
 import '../../domain/models/pigmento.dart';
 import '../../domain/models/grano_marmol.dart';
 import '../../domain/models/capa_grano.dart';
 import '../../logic/trabajo_logic.dart';
+import 'color_picker_accesible.dart';
+import 'grano_picker_accesible.dart';
 
 class DrawerEdicionGrano extends StatefulWidget {
   final TrabajoLogic logic;
@@ -26,27 +27,36 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
   Pigmento? _pigmentoSeleccionado;
   double _densidad = 0.5;
 
-  void _agregarCapa() {
+  void _anadirCapa() {
     if (_granoSeleccionado == null) return;
 
-    final nuevaCapa = CapaGrano(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    if (_pigmentoSeleccionado != null && !_granoSeleccionado!.esTenible) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('No se puede asignar pigmento a un grano no teñible.')),
+      );
+      return;
+    }
+
+    final capa = CapaGrano.crear(
       grano: _granoSeleccionado!,
-      pigmento: _granoSeleccionado!.esTenible ? _pigmentoSeleccionado : null,
+      pigmento: _pigmentoSeleccionado,
       densidad: _densidad,
     );
 
-    widget.logic.agregarCapaGrano(nuevaCapa);
+    widget.logic.agregarCapaGrano(capa);
 
-    // Resetear estado local para la siguiente capa
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Capa de grano añadida correctamente')),
+    );
+
+    // Reset fields after adding
     setState(() {
       _granoSeleccionado = null;
       _pigmentoSeleccionado = null;
       _densidad = 0.5;
     });
-    
-    // Opcional: Navegar a la vista de capas automáticamente
-    // widget.logic.seleccionarOpcion(OpcionDrawer.capas);
   }
 
   @override
@@ -54,75 +64,86 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
     return Container(
       padding: const EdgeInsets.all(16),
       color: Colors.white,
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Columna izquierda: Selección
           Expanded(
-            flex: 2,
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Tipo de Grano', style: TextStyle(fontWeight: FontWeight.bold)),
-                DropdownButton<GranoMarmol>(
-                  isExpanded: true,
-                  value: _granoSeleccionado,
-                  hint: const Text('Selecciona un grano'),
-                  items: widget.granosDisponibles.map((g) {
-                    return DropdownMenuItem(value: g, child: Text(g.nombre));
-                  }).toList(),
-                  onChanged: (val) {
-                    setState(() {
-                      _granoSeleccionado = val;
-                      if (val != null && !val.esTenible) {
-                        _pigmentoSeleccionado = null; // Limpiar si no es teñible
-                      }
-                    });
-                  },
+                Expanded(
+                  flex: 3,
+                  child: SingleChildScrollView(
+                    child: GranoPickerAccesible(
+                      granosDisponibles: widget.granosDisponibles,
+                      granoSeleccionado: _granoSeleccionado,
+                      onGranoSeleccionado: (grano) {
+                        setState(() {
+                          _granoSeleccionado = grano;
+                          if (!grano.esTenible) {
+                            _pigmentoSeleccionado = null;
+                          }
+                        });
+                      },
+                      etiqueta: 'Tipo de Grano',
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                if (_granoSeleccionado?.esTenible == true) ...[
-                  const Text('Color del Grano', style: TextStyle(fontWeight: FontWeight.bold)),
-                  DropdownButton<Pigmento>(
-                    isExpanded: true,
-                    value: _pigmentoSeleccionado,
-                    hint: const Text('Color natural (sin teñir)'),
-                    items: widget.pigmentosDisponibles.map((p) {
-                      return DropdownMenuItem(value: p, child: Text(p.nombre));
-                    }).toList(),
-                    onChanged: (val) => setState(() => _pigmentoSeleccionado = val),
+                if (_granoSeleccionado != null &&
+                    _granoSeleccionado!.esTenible) ...[
+                  const VerticalDivider(width: 32, thickness: 1),
+                  Expanded(
+                    flex: 2,
+                    child: SingleChildScrollView(
+                      child: ColorPickerAccesible(
+                        pigmentosDisponibles: widget.pigmentosDisponibles,
+                        pigmentoSeleccionado: _pigmentoSeleccionado,
+                        onPigmentoSeleccionado: (pigmento) {
+                          setState(() {
+                            _pigmentoSeleccionado = pigmento;
+                          });
+                        },
+                        etiqueta: 'Color del Grano',
+                      ),
+                    ),
                   ),
                 ],
               ],
             ),
           ),
-          const SizedBox(width: 24),
-          // Columna derecha: Densidad y Botón
-          Expanded(
-            flex: 1,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Densidad', style: TextStyle(fontWeight: FontWeight.bold)),
-                Slider(
-                  value: _densidad,
-                  min: 0.1,
-                  max: 1.0,
-                  divisions: 9,
-                  label: '${(_densidad * 100).round()}%',
-                  onChanged: (val) => setState(() => _densidad = val),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _granoSeleccionado == null ? null : _agregarCapa,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Añadir a la mezcla'),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Text('Densidad',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Expanded(
+                child: Semantics(
+                  slider: true,
+                  label: 'Ajustar densidad del grano',
+                  child: Slider(
+                    value: _densidad,
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 10,
+                    label: '${(_densidad * 100).round()}%',
+                    onChanged: (val) {
+                      setState(() {
+                        _densidad = val;
+                      });
+                    },
                   ),
                 ),
-              ],
-            ),
+              ),
+              ElevatedButton.icon(
+                onPressed: _granoSeleccionado != null ? _anadirCapa : null,
+                icon: const Icon(Icons.add),
+                label: const Text('Añadir Capa'),
+                style: ElevatedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ],
           ),
         ],
       ),
