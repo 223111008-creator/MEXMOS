@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../domain/models/configuracion_pedido.dart';
 
-/// Maneja el estado de los pedidos acumulados (carrito de compras) 
+/// Maneja el estado de los pedidos acumulados (carrito de compras)
 /// antes de ser confirmados para producción.
 class CarritoLogic extends ChangeNotifier {
   final List<ConfiguracionPedido> _pedidos = [];

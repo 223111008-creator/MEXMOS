@@ -94,6 +94,16 @@ class TrabajoLogic extends ChangeNotifier {
     notifyListeners();
   }
 
+  void iniciarDisenoVacio() {
+    _colorBaseSeleccionado =
+        null; // Empieza sin color (fondo gris/blanco por defecto)
+    _capasGrano.clear();
+    _opcionSeleccionada = OpcionDrawer.base;
+    _opacidadBase = 1.0;
+    _acabadoSeleccionado = 'Mate';
+    notifyListeners();
+  }
+
   Receta crearRecetaActual(String nombre, [String? descripcion]) {
     return Receta(
       id: 'diseno-${DateTime.now().millisecondsSinceEpoch}', // ID único simple

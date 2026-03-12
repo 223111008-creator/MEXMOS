@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../logic/trabajo_logic.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -41,23 +43,41 @@ class HomeScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 24,
+                  runSpacing: 24,
                   children: [
-                    _MenuCard(
-                      icon: Icons.add_circle_outline,
-                      title: 'Nuevo Diseño',
-                      description:
-                          'Comenzar un mosaico a partir de una receta base.',
-                      onTap: () => Navigator.pushNamed(context, '/catalogo'),
+                    SizedBox(
+                      width: 250,
+                      child: _MenuCard(
+                        icon: Icons.add_circle,
+                        title: 'Diseño en Blanco',
+                        description: 'Comenzar un lienzo desde cero.',
+                        onTap: () {
+                          context.read<TrabajoLogic>().iniciarDisenoVacio();
+                          Navigator.pushNamed(context, '/trabajo');
+                        },
+                      ),
                     ),
-                    const SizedBox(width: 24),
-                    _MenuCard(
-                      icon: Icons.grid_view,
-                      title: 'Mis Diseños',
-                      description:
-                          'Ver catálogos de diseños previos guardados.',
-                      onTap: () => Navigator.pushNamed(context, '/mis_disenos'),
+                    SizedBox(
+                      width: 250,
+                      child: _MenuCard(
+                        icon: Icons.auto_awesome_mosaic,
+                        title: 'Plantillas',
+                        description: 'Iniciar basado en una receta clásica.',
+                        onTap: () => Navigator.pushNamed(context, '/catalogo'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 250,
+                      child: _MenuCard(
+                        icon: Icons.grid_view,
+                        title: 'Mis Diseños',
+                        description: 'Ver catálogos de diseños guardados.',
+                        onTap: () =>
+                            Navigator.pushNamed(context, '/mis_disenos'),
+                      ),
                     ),
                   ],
                 ),
@@ -118,34 +138,32 @@ class _MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Card(
-        elevation: 4,
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 64, color: Colors.blue.shade800),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  description,
-                  style: TextStyle(color: Colors.grey.shade700),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+    return Card(
+      elevation: 4,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 64, color: Colors.blue.shade800),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                description,
+                style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ),
