@@ -185,7 +185,6 @@ class DrawerEdicionBase extends StatelessWidget {
                           '${(logic.dosisPigmento * 100).toStringAsFixed(1)}% de cemento'
                           ' · ${MosaicPhysics.kgPigmentoPorM2(MosaicPhysics.rendimientoBase, logic.dosisPigmento).toStringAsFixed(2)} kg/m²',
                       onChanged: (v) => logic.actualizarDosisPigmento(v),
-                      semanticsLabel: 'Intensidad del pigmento',
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

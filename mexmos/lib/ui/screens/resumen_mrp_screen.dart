@@ -7,6 +7,7 @@ import '../../data/repositories/mosaico_repositories.dart';
 import '../../domain/services/traductor_diseno_service.dart';
 import '../../domain/services/pdf_generator_service.dart';
 import '../../domain/models/ficha_tecnica.dart';
+import '../../domain/models/insumo.dart';
 import '../app_theme.dart';
 
 class ResumenMRPScreen extends StatefulWidget {
@@ -39,7 +40,7 @@ class _ResumenMRPScreenState extends State<ResumenMRPScreen> {
 
     // Build baseDatosInsumos from the repository's local _insumosDB data
     // by fetching each insumo referenced in the recipe
-    final Map<String, dynamic> baseDatosInsumos = {};
+    final Map<String, Insumo> baseDatosInsumos = {};
     final insumoIds = <String>{};
 
     // Collect all insumo IDs referenced in the recipe
