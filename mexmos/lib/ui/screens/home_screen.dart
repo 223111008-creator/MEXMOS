@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../logic/trabajo_logic.dart';
-import 'configurador_2d_screen.dart';
+import '../app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -9,176 +10,286 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mexmos'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'Ajustes Globales y Accesibilidad',
-            onPressed: () => Navigator.pushNamed(context, '/settings'),
+      backgroundColor: AppTheme.surfaceDark,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildAppBar(context),
+            Expanded(child: _buildBody(context)),
+            _buildStatusBar(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppBar(BuildContext context) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: AppTheme.surfacePanel,
+        border: Border(
+          bottom: BorderSide(color: AppTheme.borderPanel, width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            'MEXMOS',
+            style: GoogleFonts.syne(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.brandTerra,
+              letterSpacing: 2,
+            ),
           ),
+          const SizedBox(width: 8),
+          Text(
+            '·  Mosaicos Personalizados',
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: AppTheme.textMuted,
+            ),
+          ),
+          const Spacer(),
           IconButton(
-            icon: const Icon(Icons.info_outline),
-            tooltip: 'Acerca de',
-            onPressed: () => _mostrarAcercaDe(context),
+            icon: Icon(Icons.settings_outlined,
+                color: AppTheme.textSecondary, size: 18),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+            tooltip: 'Configuración',
           ),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Bienvenido a Mexmos',
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 720),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              Text(
+                'Diseña tu mosaico',
+                style: GoogleFonts.syne(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Diseña mosaicos de terrazo y marmolina con cálculo automático de MRP.',
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
-                  textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Selecciona cómo quieres comenzar',
+                style: GoogleFonts.dmSans(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
                 ),
-                const SizedBox(height: 48),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 24,
-                  runSpacing: 24,
+              ),
+              const SizedBox(height: 32),
+              _buildMenuGrid(context),
+              const SizedBox(height: 40),
+              _buildVersionBadge(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuGrid(BuildContext context) {
+    final items = [
+      _MenuItem(
+        icon: Icons.grid_view_rounded,
+        label: 'Configurador 2D',
+        description: 'Diseño visual con renderizado Voronoi en tiempo real',
+        route: '/configurador_2d',
+        accent: AppTheme.brandTerra,
+        isHighlighted: true,
+      ),
+      _MenuItem(
+        icon: Icons.tune_rounded,
+        label: 'Diseñador Básico',
+        description: 'Configura materiales, colores y capas de grano',
+        route: '/trabajo',
+        accent: AppTheme.brandCobalt,
+      ),
+      _MenuItem(
+        icon: Icons.library_books_outlined,
+        label: 'Catálogo de Recetas',
+        description: 'Explora y carga plantillas predefinidas',
+        route: '/catalogo',
+        accent: const Color(0xFF4A7C6B),
+      ),
+      _MenuItem(
+        icon: Icons.folder_open_rounded,
+        label: 'Mis Diseños',
+        description: 'Carga y edita diseños guardados en la nube',
+        route: '/mis_disenos',
+        accent: const Color(0xFF6B4A7C),
+      ),
+    ];
+
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
+      children: items.map((item) => _buildMenuCard(context, item)).toList(),
+    );
+  }
+
+  Widget _buildMenuCard(BuildContext context, _MenuItem item) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () => Navigator.pushNamed(context, item.route),
+        child: Container(
+          width: 320,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: item.isHighlighted ? AppTheme.surfaceCard : AppTheme.surfacePanel,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: item.isHighlighted
+                  ? item.accent.withOpacity(0.4)
+                  : AppTheme.borderPanel,
+              width: 1,
+            ),
+            boxShadow: item.isHighlighted
+                ? [
+                    BoxShadow(
+                      color: item.accent.withOpacity(0.08),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: item.accent.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(item.icon, color: item.accent, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      width: 250,
-                      child: _MenuCard(
-                        icon: Icons.add_circle,
-                        title: 'Diseño 2D (Nuevo)',
-                        description: 'Prototipo del nuevo configurador visual 2D.',
-                        onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const Configurador2DScreen()));
-                        },
+                    Text(
+                      item.label,
+                      style: GoogleFonts.syne(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
                       ),
                     ),
-                    SizedBox(
-                      width: 250,
-                      child: _MenuCard(
-                        icon: Icons.build_circle,
-                        title: 'Diseño Básico',
-                        description: 'Configurador clásico de recetas.',
-                        onTap: () {
-                          context.read<TrabajoLogic>().iniciarDisenoVacio();
-                          Navigator.pushNamed(context, '/trabajo');
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 250,
-                      child: _MenuCard(
-                        icon: Icons.auto_awesome_mosaic,
-                        title: 'Plantillas',
-                        description: 'Iniciar basado en una receta clásica.',
-                        onTap: () => Navigator.pushNamed(context, '/catalogo'),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 250,
-                      child: _MenuCard(
-                        icon: Icons.grid_view,
-                        title: 'Mis Diseños',
-                        description: 'Ver catálogos de diseños guardados.',
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/mis_disenos'),
+                    const SizedBox(height: 3),
+                    Text(
+                      item.description,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        color: AppTheme.textSecondary,
+                        height: 1.4,
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textMuted, size: 16),
+            ],
           ),
         ),
       ),
     );
   }
 
-  void _mostrarAcercaDe(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Acerca de Mexmos'),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Mexicana de Mosaicos (Mexmos)'),
-              SizedBox(height: 8),
-              Text(
-                  'Más de 55 años de experiencia en mosaicos de terrazo y mármol.'),
-              SizedBox(height: 16),
-              Text(
-                  'Esta versión incluye el calculador de fórmulas (MRP) para minimizar errores y mermas en la fabricación.'),
-              SizedBox(height: 16),
-              Text('Versión: 0.1.0 (Prototipo)',
-                  style: TextStyle(color: Colors.grey)),
-            ],
+  Widget _buildVersionBadge() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppTheme.surfacePanel,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: AppTheme.borderPanel),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cerrar'),
+          child: Text(
+            'v0.1.0 · Prototipo',
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              color: AppTheme.textMuted,
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusBar(BuildContext context) {
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: AppTheme.surfacePanel,
+        border: Border(
+          top: BorderSide(color: AppTheme.borderPanel, width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            'Mexana de Mosaicos S.A. de C.V.',
+            style: GoogleFonts.dmSans(
+              fontSize: 10,
+              color: AppTheme.textMuted,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A4B2E),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              'WCAG 2.1 AA',
+              style: GoogleFonts.dmSans(
+                fontSize: 9,
+                color: const Color(0xFF4ADE80),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _MenuCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-  final VoidCallback onTap;
-
-  const _MenuCard({
+class _MenuItem {
+  const _MenuItem({
     required this.icon,
-    required this.title,
+    required this.label,
     required this.description,
-    required this.onTap,
+    required this.route,
+    required this.accent,
+    this.isHighlighted = false,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 64, color: Colors.blue.shade800),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  final IconData icon;
+  final String label;
+  final String description;
+  final String route;
+  final Color accent;
+  final bool isHighlighted;
 }

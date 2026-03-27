@@ -1,10 +1,12 @@
 // lib/ui/screens/trabajo_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../logic/trabajo_logic.dart';
 import '../../domain/models/pigmento.dart';
 import '../../domain/models/grano_marmol.dart';
 import '../../data/repositories/mosaico_repositories.dart';
+import '../app_theme.dart';
 import '../widgets/opcion_drawer_button.dart';
 import '../widgets/drawer_edicion_base.dart';
 import '../widgets/drawer_edicion_grano.dart';
@@ -56,102 +58,140 @@ class _TrabajoScreenState extends State<TrabajoScreen> {
   Widget build(BuildContext context) {
     final logic = context.watch<TrabajoLogic>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Workspace de Diseño'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.fullscreen),
-            tooltip: 'Ver Acabado Final',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const VistaFinalScreen()),
-              );
-            },
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: Scaffold(
+        backgroundColor: AppTheme.surfaceDark,
+        appBar: AppBar(
+          backgroundColor: AppTheme.surfacePanel,
+          elevation: 0,
+          title: Text(
+            'Workspace de Diseño',
+            style: GoogleFonts.syne(
+              color: AppTheme.brandTerra,
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.save),
-            tooltip: 'Guardar Diseño / Ficha MRP',
-            onPressed: () => _mostrarDialogoGuardar(context, logic),
-          ),
-        ],
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isSmallScreen = constraints.maxWidth < 600;
-          final double drawerWidth = isSmallScreen ? 80.0 : 120.0;
+          iconTheme: const IconThemeData(color: AppTheme.textPrimary),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.fullscreen, color: AppTheme.textPrimary),
+              tooltip: 'Ver Acabado Final',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const VistaFinalScreen()),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.save, color: AppTheme.textPrimary),
+              tooltip: 'Guardar Diseño / Ficha MRP',
+              onPressed: () => _mostrarDialogoGuardar(context, logic),
+            ),
+          ],
+        ),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final isSmallScreen = constraints.maxWidth < 600;
+            final double drawerWidth = isSmallScreen ? 80.0 : 120.0;
 
-          return Row(
-            children: [
-              // 1. Drawer Vertical Izquierdo
-              Container(
-                width: drawerWidth,
-                color: Colors.white,
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  children: [
-                    _buildNavButton(context, logic, OpcionDrawer.base,
-                        Icons.format_color_fill, isSmallScreen ? null : 'Base'),
-                    const SizedBox(height: 12),
-                    _buildNavButton(context, logic, OpcionDrawer.grano,
-                        Icons.grain, isSmallScreen ? null : 'Grano'),
-                    const SizedBox(height: 12),
-                    _buildNavButton(context, logic, OpcionDrawer.capas,
-                        Icons.layers, isSmallScreen ? null : 'Capas'),
-                    const SizedBox(height: 12),
-                    _buildNavButton(context, logic, OpcionDrawer.acabado,
-                        Icons.auto_awesome, isSmallScreen ? null : 'Acabado'),
-                  ],
+            return Row(
+              children: [
+                // 1. Drawer Vertical Izquierdo
+                Container(
+                  width: drawerWidth,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.surfacePanel,
+                    border: Border(
+                      right: BorderSide(color: AppTheme.borderPanel, width: 1),
+                    ),
+                  ),
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    children: [
+                      _buildNavButton(context, logic, OpcionDrawer.base,
+                          Icons.format_color_fill,
+                          isSmallScreen ? null : 'Base'),
+                      const SizedBox(height: 12),
+                      _buildNavButton(context, logic, OpcionDrawer.grano,
+                          Icons.grain, isSmallScreen ? null : 'Grano'),
+                      const SizedBox(height: 12),
+                      _buildNavButton(context, logic, OpcionDrawer.capas,
+                          Icons.layers, isSmallScreen ? null : 'Capas'),
+                      const SizedBox(height: 12),
+                      _buildNavButton(context, logic, OpcionDrawer.acabado,
+                          Icons.auto_awesome,
+                          isSmallScreen ? null : 'Acabado'),
+                    ],
+                  ),
                 ),
-              ),
-              const VerticalDivider(width: 1, thickness: 1),
 
-              // 2 y 3. Visor Central y Drawer de Edición (Cargando datos)
-              Expanded(
-                child: FutureBuilder<List<dynamic>>(
-                  future: _catalogosFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError) {
-                      return Center(
-                          child: Text('Error de conexión: ${snapshot.error}'));
-                    }
-
-                    final pigmentos = snapshot.data![0] as List<Pigmento>;
-                    final granos = snapshot.data![1] as List<GranoMarmol>;
-
-                    return Column(
-                      children: [
-                        // Visor
-                        Expanded(
-                          child: Container(
-                            color: Colors.grey
-                                .shade200, // Un fondo ligeramente más oscuro por si el diseño es blanco
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.all(32),
-                            child: const MosaicoViewer(),
+                // 2 y 3. Visor Central y Drawer de Edición (Cargando datos)
+                Expanded(
+                  child: FutureBuilder<List<dynamic>>(
+                    future: _catalogosFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                          child: CircularProgressIndicator(
+                            color: AppTheme.brandTerra,
                           ),
-                        ),
-                        const Divider(height: 1, thickness: 1),
-                        // Drawer Inferior
-                        SizedBox(
-                          height:
-                              220, // Altura ajustada para acomodar los nuevos controles
-                          width: double.infinity,
-                          child: _buildDrawerEdicion(
-                              logic.opcionSeleccionada, pigmentos, granos),
-                        ),
-                      ],
-                    );
-                  },
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text(
+                            'Error de conexión: ${snapshot.error}',
+                            style: GoogleFonts.dmSans(
+                                color: AppTheme.textSecondary),
+                          ),
+                        );
+                      }
+
+                      final pigmentos = snapshot.data![0] as List<Pigmento>;
+                      final granos = snapshot.data![1] as List<GranoMarmol>;
+
+                      return Column(
+                        children: [
+                          // Visor Central
+                          Expanded(
+                            child: Container(
+                              color: AppTheme.surfaceDark,
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.all(32),
+                              child: const MosaicoViewer(),
+                            ),
+                          ),
+                          Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: AppTheme.borderPanel,
+                          ),
+                          // Drawer Inferior
+                          Container(
+                            height: 220,
+                            width: double.infinity,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.surfacePanel,
+                              border: Border(
+                                top: BorderSide(
+                                    color: AppTheme.borderPanel, width: 1),
+                              ),
+                            ),
+                            child: _buildDrawerEdicion(
+                                logic.opcionSeleccionada, pigmentos, granos),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -177,40 +217,91 @@ class _TrabajoScreenState extends State<TrabajoScreen> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Guardar Diseño'),
+          backgroundColor: AppTheme.surfaceCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: AppTheme.borderPanel),
+          ),
+          title: Text(
+            'Guardar Diseño',
+            style: GoogleFonts.syne(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                decoration: const InputDecoration(
-                    labelText: 'Nombre del Mosaico (Ej. Clásico Rojo)'),
+                style: GoogleFonts.dmSans(color: AppTheme.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Nombre del Mosaico (Ej. Clásico Rojo)',
+                  labelStyle:
+                      GoogleFonts.dmSans(color: AppTheme.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppTheme.borderPanel),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppTheme.brandTerra),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.surfacePanel,
+                ),
                 onChanged: (val) => nombreDiseno = val,
               ),
               const SizedBox(height: 10),
               TextField(
-                decoration:
-                    const InputDecoration(labelText: 'Descripción (Opcional)'),
+                style: GoogleFonts.dmSans(color: AppTheme.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Descripción (Opcional)',
+                  labelStyle:
+                      GoogleFonts.dmSans(color: AppTheme.textSecondary),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppTheme.borderPanel),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: AppTheme.brandTerra),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.surfacePanel,
+                ),
                 onChanged: (val) => descripcionDiseno = val,
               ),
             ],
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancelar')),
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                'Cancelar',
+                style: GoogleFonts.dmSans(color: AppTheme.textSecondary),
+              ),
+            ),
             TextButton(
-                onPressed: () {
-                  Navigator.pop(ctx, false);
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const ResumenMRPScreen()));
-                },
-                child: const Text(
-                  'Ficha MRP',
-                  style: TextStyle(color: Colors.blueGrey),
-                )),
+              onPressed: () {
+                Navigator.pop(ctx, false);
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const ResumenMRPScreen()));
+              },
+              child: Text(
+                'Ficha MRP',
+                style: GoogleFonts.dmSans(color: AppTheme.textSecondary),
+              ),
+            ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.brandTerra,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
               onPressed: () {
                 if (nombreDiseno.trim().isEmpty) {
                   ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
@@ -219,7 +310,10 @@ class _TrabajoScreenState extends State<TrabajoScreen> {
                 }
                 Navigator.pop(ctx, true);
               },
-              child: const Text('Guardar'),
+              child: Text(
+                'Guardar',
+                style: GoogleFonts.syne(fontWeight: FontWeight.w700),
+              ),
             ),
           ],
         );

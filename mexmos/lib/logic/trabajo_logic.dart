@@ -1,11 +1,14 @@
 // lib/logic/trabajo_logic.dart
 import 'package:flutter/foundation.dart';
+import '../core/constants/mosaic_physics.dart';
 import '../domain/models/pigmento.dart';
 import '../domain/models/capa_grano.dart';
 import '../domain/models/receta.dart';
 import '../domain/models/grano_en_receta.dart';
 import '../domain/models/pigmento_en_receta.dart';
 import '../domain/models/pasta_base.dart';
+import '../domain/models/grano_marmol.dart';
+import '../domain/models/enums.dart';
 import '../data/repositories/mosaico_repositories.dart';
 
 enum OpcionDrawer { base, grano, capas, acabado }
@@ -21,9 +24,11 @@ class TrabajoLogic extends ChangeNotifier {
 
   Pigmento? _colorBaseSeleccionado;
   double _opacidadBase = 1.0;
+  double _dosisPigmento = MosaicPhysics.defaultDosisPigmento;
 
   Pigmento? get colorBaseSeleccionado => _colorBaseSeleccionado;
   double get opacidadBase => _opacidadBase;
+  double get dosisPigmento => _dosisPigmento;
 
   // --- Propiedades de Granos (Capas) ---
   final List<CapaGrano> _capasGrano = [];
@@ -52,6 +57,12 @@ class TrabajoLogic extends ChangeNotifier {
 
   void actualizarOpacidadBase(double opacidad) {
     _opacidadBase = opacidad.clamp(0.0, 1.0);
+    notifyListeners();
+  }
+
+  void actualizarDosisPigmento(double dosis) {
+    _dosisPigmento =
+        dosis.clamp(MosaicPhysics.minDosisPigmento, MosaicPhysics.maxDosisPigmento);
     notifyListeners();
   }
 
@@ -114,42 +125,73 @@ class TrabajoLogic extends ChangeNotifier {
     notifyListeners();
   }
 
-  Receta crearRecetaActual(String nombre, [String? descripcion]) {
-    final double pesoGranos = _capasGrano.fold(0.0, (sum, capa) => sum + (5.0 * capa.densidad));
-    final double rendimientoTotal = 25.0 + pesoGranos; // Pasta base (25kg) + granos
-    final double aguaNecesaria = rendimientoTotal * 0.15; // 15% de agua
+  Receta crearRecetaActual(String nombre) {
+    const rendimiento = MosaicPhysics.rendimientoBase;
+
+    // ── Grains: distribute kg proportionally by layer density ──
+    final densidades = _capasGrano.map((c) => c.densidad).toList();
+    final kgsGrano = MosaicPhysics.distribuirGranos(densidades, rendimiento);
+    final granos = List.generate(_capasGrano.length, (i) {
+      return GranoEnReceta(
+        grano: _capasGrano[i].grano,
+        cantidadKgPorM2: kgsGrano[i],
+      );
+    });
+
+    // ── Pigment: dosage as % of cement weight ──────────────────
+    final kgPigmento =
+        MosaicPhysics.kgPigmentoPorM2(rendimiento, _dosisPigmento);
+
+    final pigmentoBase = _colorBaseSeleccionado ??
+        Pigmento(
+          id: 'default_gris',
+          nombreComercial: 'Gris Natural',
+          codigoHex: '#808080',
+          codigoFisico: 'GN-00',
+          insumoRelacionadoId: 'pigmento_gris',
+        );
+
+    // ── Pasta base ────────────────────────────────────────────
+    final pasta = PastaBase(
+      id: 'pasta_custom',
+      nombre: 'Pasta Personalizada',
+      cementoInsumoId: 'cemento_gpc_40',
+      marmolinaInsumoId: 'marmolina_blanca',
+      proporcionCemento: MosaicPhysics.proporcionCemento,
+      proporcionMarmolina: MosaicPhysics.proporcionMarmolina,
+      aguaLitrosPorKgSeco: MosaicPhysics.ratioAguaSeco,
+    );
 
     return Receta(
-      id: 'diseno-${DateTime.now().millisecondsSinceEpoch}', // ID único simple
+      id: 'receta_${DateTime.now().millisecondsSinceEpoch}',
       nombre: nombre,
-      descripcion: descripcion,
-      // Usamos una pasta base genérica por ahora ya que el configurador se saltó esa parte física
-      pastaBase: const PastaBase(
-        id: 'pb-custom',
-        nombre: 'Pasta Base Personalizada',
-        cementoInsumoId: 'ins-cem-01',
-        marmolinaInsumoId: 'ins-mar-01',
-        proporcionCemento: 1.0,
-        proporcionMarmolina: 3.0,
-        aguaLitrosPorKgSeco: 0.15,
-      ),
+      descripcion: 'Diseño personalizado',
+      pastaBase: pasta,
       pigmentos: [
-        if (_colorBaseSeleccionado != null)
-          PigmentoEnReceta(pigmento: _colorBaseSeleccionado!, cantidadKgPorM2: 0.5)
-        else
-          PigmentoEnReceta(
-            pigmento: Pigmento(id: 'pig-default', nombreComercial: 'Gris Natural', codigoHex: '#9E9E9E', codigoFisico: 'N/A', insumoRelacionadoId: 'ins-default'), 
-            cantidadKgPorM2: 0.5
-          )
+        PigmentoEnReceta(
+          pigmento: pigmentoBase,
+          cantidadKgPorM2: kgPigmento,
+        ),
       ],
-      granos: _capasGrano
-          .map((capa) => GranoEnReceta(
-                grano: capa.grano,
-                cantidadKgPorM2: 5.0 * capa.densidad, 
-              ))
-          .toList(),
-      rendimientoKgPorM2: rendimientoTotal,
-      aguaLitrosPorM2: aguaNecesaria,
+      granos: granos.isEmpty
+          ? [
+              GranoEnReceta(
+                grano: GranoMarmol(
+                  id: 'grano_default',
+                  nombre: 'Mármol Blanco',
+                  equipo: EquipoMolienda.quebradora,
+                  codigoTamano: '3-4',
+                  abertura: '3/16"',
+                  colorNatural: 0xFFF5F5F5,
+                  esTenible: false,
+                  insumoRelacionadoId: 'marmol_blanco_grano',
+                ),
+                cantidadKgPorM2: rendimiento * MosaicPhysics.fraccionGranos,
+              )
+            ]
+          : granos,
+      rendimientoKgPorM2: rendimiento,
+      aguaLitrosPorM2: rendimiento * MosaicPhysics.ratioAguaSeco,
       fechaCreacion: DateTime.now(),
       activa: true,
     );
@@ -157,7 +199,7 @@ class TrabajoLogic extends ChangeNotifier {
 
   Future<void> guardarDisenoActual(String nombre, String? descripcion) async {
     final repo = MosaicoRepository();
-    final receta = crearRecetaActual(nombre, descripcion);
+    final receta = crearRecetaActual(nombre);
     await repo.guardarReceta(receta);
   }
 }

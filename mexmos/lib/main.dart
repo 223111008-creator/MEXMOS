@@ -56,12 +56,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Mosaico App',
       theme: accesibilidadLogic.altoContraste
-          ? ThemeData.dark().copyWith(
-              colorScheme: const ColorScheme.dark(
-                primary: Colors.lightBlueAccent,
-                secondary: Colors.amberAccent,
-              ),
-            )
+          ? AppTheme.highContrastDarkTheme
           : AppTheme.darkTheme,
       builder: (context, child) {
         return MediaQuery(
