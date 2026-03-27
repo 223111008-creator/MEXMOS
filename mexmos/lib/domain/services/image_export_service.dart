@@ -2,9 +2,9 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../../logic/trabajo_logic.dart';
 import '../../ui/widgets/mosaico_viewer.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import '../../core/rendering/voronoi_engine.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'web_download_stub.dart' if (dart.library.html) 'web_download_impl.dart';
 
 class ImageExportService {
   /// Generates a high-resolution PNG image of the mosaic
@@ -18,10 +18,18 @@ class ImageExportService {
     final canvas =
         Canvas(recorder, Rect.fromPoints(Offset.zero, Offset(sizePx, sizePx)));
 
+    final engine = VoronoiEngine(
+      width: sizePx,
+      height: sizePx,
+      offsetPasta: 1.0,
+    );
+    final piedras = engine.generarSistema(logic.capasGrano, sizePx / 300.0);
+
     // 2. Instanciar el painter que comparten la UI y el exporter
     final painter = MosaicoPainter(
       logic: logic,
       modoDaltonismo: modoDaltonismo,
+      piedrasCacheadas: piedras,
     );
 
     // 3. Dibujar en el canvas forzado
@@ -48,12 +56,8 @@ class ImageExportService {
   }
 
   static void _downloadWeb(List<int> bytes, String filename) {
-    if (!kIsWeb) return;
-    final blob = html.Blob([bytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-    html.AnchorElement(href: url)
-      ..setAttribute("download", filename)
-      ..click();
-    html.Url.revokeObjectUrl(url);
+    if (kIsWeb) {
+      downloadWebFile(bytes, filename);
+    }
   }
 }

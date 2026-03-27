@@ -29,6 +29,9 @@ class TrabajoLogic extends ChangeNotifier {
   final List<CapaGrano> _capasGrano = [];
   List<CapaGrano> get capasGrano => List.unmodifiable(_capasGrano);
 
+  CapaGrano? _capaEnEdicion;
+  CapaGrano? get capaEnEdicion => _capaEnEdicion;
+
   // --- Propiedades de Acabado ---
   String _acabadoSeleccionado = 'Mate';
   String get acabadoSeleccionado => _acabadoSeleccionado;
@@ -37,6 +40,7 @@ class TrabajoLogic extends ChangeNotifier {
   void seleccionarOpcion(OpcionDrawer opcion) {
     if (_opcionSeleccionada != opcion) {
       _opcionSeleccionada = opcion;
+      _capaEnEdicion = null; // Limpiar preview al cambiar de pestaña
       notifyListeners();
     }
   }
@@ -59,6 +63,12 @@ class TrabajoLogic extends ChangeNotifier {
 
   void agregarCapaGrano(CapaGrano capa) {
     _capasGrano.add(capa);
+    _capaEnEdicion = null; // Limpiar preview al añadir
+    notifyListeners();
+  }
+
+  void actualizarCapaEnEdicion(CapaGrano? capa) {
+    _capaEnEdicion = capa;
     notifyListeners();
   }
 
@@ -105,6 +115,10 @@ class TrabajoLogic extends ChangeNotifier {
   }
 
   Receta crearRecetaActual(String nombre, [String? descripcion]) {
+    final double pesoGranos = _capasGrano.fold(0.0, (sum, capa) => sum + (5.0 * capa.densidad));
+    final double rendimientoTotal = 25.0 + pesoGranos; // Pasta base (25kg) + granos
+    final double aguaNecesaria = rendimientoTotal * 0.15; // 15% de agua
+
     return Receta(
       id: 'diseno-${DateTime.now().millisecondsSinceEpoch}', // ID único simple
       nombre: nombre,
@@ -119,21 +133,23 @@ class TrabajoLogic extends ChangeNotifier {
         proporcionMarmolina: 3.0,
         aguaLitrosPorKgSeco: 0.15,
       ),
-      pigmentos: _colorBaseSeleccionado != null
-          ? [
-              PigmentoEnReceta(
-                  pigmento: _colorBaseSeleccionado!, cantidadKgPorM2: 0.5)
-            ]
-          : [],
+      pigmentos: [
+        if (_colorBaseSeleccionado != null)
+          PigmentoEnReceta(pigmento: _colorBaseSeleccionado!, cantidadKgPorM2: 0.5)
+        else
+          PigmentoEnReceta(
+            pigmento: Pigmento(id: 'pig-default', nombreComercial: 'Gris Natural', codigoHex: '#9E9E9E', codigoFisico: 'N/A', insumoRelacionadoId: 'ins-default'), 
+            cantidadKgPorM2: 0.5
+          )
+      ],
       granos: _capasGrano
           .map((capa) => GranoEnReceta(
                 grano: capa.grano,
-                cantidadKgPorM2: 5.0 *
-                    capa.densidad, // Translación de densidad a Kg empírico
+                cantidadKgPorM2: 5.0 * capa.densidad, 
               ))
           .toList(),
-      rendimientoKgPorM2: 25.0,
-      aguaLitrosPorM2: 3.75,
+      rendimientoKgPorM2: rendimientoTotal,
+      aguaLitrosPorM2: aguaNecesaria,
       fechaCreacion: DateTime.now(),
       activa: true,
     );

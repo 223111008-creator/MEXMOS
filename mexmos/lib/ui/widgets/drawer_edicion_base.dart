@@ -64,7 +64,6 @@ class DrawerEdicionBase extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -78,7 +77,7 @@ class DrawerEdicionBase extends StatelessWidget {
             onAddCustomColor: () => _mostrarDialogoColorPersonalizado(context),
             etiqueta: 'Color de Base',
           ),
-          const Spacer(),
+          const SizedBox(height: 24),
           const Text('Opacidad', style: TextStyle(fontWeight: FontWeight.bold)),
           Semantics(
             slider: true,

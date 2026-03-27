@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'logic/trabajo_logic.dart';
@@ -9,6 +9,8 @@ import 'ui/screens/home_screen.dart';
 import 'ui/screens/catalogo_screen.dart';
 import 'ui/screens/settings_screen.dart';
 import 'ui/screens/mis_disenos_screen.dart';
+import 'ui/app_theme.dart';
+import 'logic/configurador_2d_logic.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +38,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => TrabajoLogic()),
         ChangeNotifierProvider(create: (_) => AccesibilidadLogic()),
         ChangeNotifierProvider(create: (_) => ConfiguradorLogic()),
+        ChangeNotifierProvider(create: (_) => Configurador2DLogic()),
         // ... otros providers
       ],
       child: const MyApp(),
@@ -59,7 +62,7 @@ class MyApp extends StatelessWidget {
                 secondary: Colors.amberAccent,
               ),
             )
-          : ThemeData.light(),
+          : AppTheme.darkTheme,
       builder: (context, child) {
         return MediaQuery(
           // Escala global para textos y UI

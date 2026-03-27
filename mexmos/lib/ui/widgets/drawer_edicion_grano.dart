@@ -28,8 +28,30 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
   Pigmento? _pigmentoSeleccionado;
   double _densidad = 0.5;
 
+  void _actualizarPreview() {
+    if (_granoSeleccionado != null && _densidad > 0 && 
+        !(_pigmentoSeleccionado != null && !_granoSeleccionado!.esTenible)) {
+      widget.logic.actualizarCapaEnEdicion(
+        CapaGrano.crear(
+          grano: _granoSeleccionado!,
+          pigmento: _pigmentoSeleccionado,
+          densidad: _densidad,
+        ),
+      );
+    } else {
+      widget.logic.actualizarCapaEnEdicion(null);
+    }
+  }
+
   void _anadirCapa() {
     if (_granoSeleccionado == null) return;
+
+    if (_densidad <= 0.0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La densidad debe ser mayor a 0% para añadir la capa.')),
+      );
+      return;
+    }
 
     if (_pigmentoSeleccionado != null && !_granoSeleccionado!.esTenible) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,13 +74,13 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
       const SnackBar(content: Text('Capa de grano añadida correctamente')),
     );
 
-    // Reset fields after adding
-    setState(() {
-      _granoSeleccionado = null;
-      _pigmentoSeleccionado = null;
-      _densidad = 0.5;
-    });
-  }
+      setState(() {
+        _granoSeleccionado = null;
+        _pigmentoSeleccionado = null;
+        _densidad = 0.5;
+      });
+      _actualizarPreview();
+    }
 
   Future<void> _mostrarDialogoColorPersonalizado(BuildContext context) async {
     Color tempColor = Colors.blue;
@@ -98,6 +120,7 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
         setState(() {
           _pigmentoSeleccionado = nuevoPigmento;
         });
+        _actualizarPreview();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Error procesando color')));
@@ -109,16 +132,14 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(
-                  flex: 3,
                   child: SingleChildScrollView(
                     child: GranoPickerAccesible(
                       granosDisponibles: widget.granosDisponibles,
@@ -130,6 +151,7 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
                             _pigmentoSeleccionado = null;
                           }
                         });
+                        _actualizarPreview();
                       },
                       etiqueta: 'Tipo de Grano',
                     ),
@@ -137,9 +159,8 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
                 ),
                 if (_granoSeleccionado != null &&
                     _granoSeleccionado!.esTenible) ...[
-                  const VerticalDivider(width: 32, thickness: 1),
+                  const Divider(height: 16, thickness: 1),
                   Expanded(
-                    flex: 2,
                     child: SingleChildScrollView(
                       child: ColorPickerAccesible(
                         pigmentosDisponibles: [
@@ -151,6 +172,7 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
                           setState(() {
                             _pigmentoSeleccionado = pigmento;
                           });
+                          _actualizarPreview();
                         },
                         onAddCustomColor: () =>
                             _mostrarDialogoColorPersonalizado(context),
@@ -163,26 +185,26 @@ class _DrawerEdicionGranoState extends State<DrawerEdicionGrano> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text('Densidad',
                   style: TextStyle(fontWeight: FontWeight.bold)),
-              Expanded(
-                child: Semantics(
-                  slider: true,
-                  label: 'Ajustar densidad del grano',
-                  child: Slider(
-                    value: _densidad,
-                    min: 0.0,
-                    max: 1.0,
-                    divisions: 10,
-                    label: '${(_densidad * 100).round()}%',
-                    onChanged: (val) {
-                      setState(() {
-                        _densidad = val;
-                      });
-                    },
-                  ),
+              Semantics(
+                slider: true,
+                label: 'Ajustar densidad del grano',
+                child: Slider(
+                  value: _densidad,
+                  min: 0.0,
+                  max: 1.0,
+                  divisions: 10,
+                  label: '${(_densidad * 100).round()}%',
+                  onChanged: (val) {
+                    setState(() {
+                      _densidad = val;
+                    });
+                    _actualizarPreview();
+                  },
                 ),
               ),
               ElevatedButton.icon(

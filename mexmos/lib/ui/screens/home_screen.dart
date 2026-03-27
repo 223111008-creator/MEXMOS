@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../logic/trabajo_logic.dart';
+import 'configurador_2d_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -52,8 +53,19 @@ class HomeScreen extends StatelessWidget {
                       width: 250,
                       child: _MenuCard(
                         icon: Icons.add_circle,
-                        title: 'Diseño en Blanco',
-                        description: 'Comenzar un lienzo desde cero.',
+                        title: 'Diseño 2D (Nuevo)',
+                        description: 'Prototipo del nuevo configurador visual 2D.',
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const Configurador2DScreen()));
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 250,
+                      child: _MenuCard(
+                        icon: Icons.build_circle,
+                        title: 'Diseño Básico',
+                        description: 'Configurador clásico de recetas.',
                         onTap: () {
                           context.read<TrabajoLogic>().iniciarDisenoVacio();
                           Navigator.pushNamed(context, '/trabajo');

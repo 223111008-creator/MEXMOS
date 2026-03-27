@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class TransformadorColor {
   static Color aplicarFiltro(Color original, String modo) {
-    if (modo == 'Normal') {
+    if (modo == 'Normal' || modo == 'Ninguno') {
       return original;
     }
 
